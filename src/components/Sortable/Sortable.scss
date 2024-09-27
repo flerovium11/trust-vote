@@ -1,0 +1,114 @@
+.sortable-item {
+    cursor: pointer;
+    position: relative;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    transition: background-color 0.3s;
+    user-select: none;
+    width: 100%;
+
+    &:hover {
+        background-color: #f9f9f9;
+    }
+
+    &.dragging {
+        position: absolute;
+        z-index: 1000;
+        box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+    }
+}
+
+body:has(.sortable-item.dragging) .sortable-item {
+    pointer-events: none;
+}
+
+.sortable-container {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    width: 100%;
+    flex: 1;
+    position: relative;
+
+    &:last-child:not(:has(:nth-child(1))) {
+        &::before {
+            content: 'Schulsprecher*in';
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            height: 50px;
+            opacity: 0.5;
+        }
+
+        &::after {
+            content: '1. Stellvertretung';
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            height: 50px;
+            opacity: 0.5;
+        }
+    }
+
+    &:first-child:empty {
+        &::before {
+            content: 'Keine Kandidat*innen mehr vorhanden';
+            color: gray;
+        }
+    }
+
+    .placeholder {
+        background-color: #f0f0f0;
+        border: 1px dashed #ccc;
+        border-radius: 5px;
+        height: 50px;
+        margin-bottom: 10px;
+
+        &.full {
+            position: absolute;
+            top: 0;
+            left: 0;
+            border: none;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: end;
+            padding: 1em;
+            z-index: 500;
+            background-color: rgba(179, 179, 179, 0.5);
+            animation: appear 0.1s ease-out;
+            animation-fill-mode: forwards;
+
+            &::after {
+                content: var(--message);
+                // background-color: rgb(216, 39, 39);
+                // border-radius: 0.5em;
+                // padding: 0.5em;
+                text-align: center;
+                height: fit-content;
+                color: rgb(255, 75, 75);
+            }
+        }
+    }
+}
+
+@keyframes appear {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

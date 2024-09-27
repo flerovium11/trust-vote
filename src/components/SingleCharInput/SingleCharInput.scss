@@ -1,0 +1,36 @@
+@import '../../styles/variables.scss';
+
+.single-char-input {
+   display: flex;
+   column-gap: 0.5em;
+   font-size: 20px;
+
+   .char {
+      width: 2em;
+      height: 2em;
+      background-color: $bg-input;
+      border-radius: 0.25em;
+      outline: none;
+      padding: 0.6em;
+      // remove the up and down arrows from the input
+      appearance: textfield;
+
+      &::-webkit-inner-spin-button,
+      &::-webkit-outer-spin-button {
+         appearance: none;
+         margin: 0;
+      }
+
+      &:focus {
+         background-color: $bg-input-highlight;
+      }
+   }
+
+   &.error .char {
+      background-color: $bg-error;
+   }
+
+   &.success .char {
+      background-color: $bg-success;
+   }
+}
