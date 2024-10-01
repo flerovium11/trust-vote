@@ -1,22 +1,20 @@
 import { FC, useEffect, useState } from 'react'
 import SingleDigitInput from '../../components/SingleCharInput'
-import { supabase } from '../../supabase'
 import {
     ExclamationCircleOutlined,
     CheckCircleOutlined,
     LoadingOutlined,
     CloseCircleOutlined,
+    WarningOutlined,
 } from '@ant-design/icons'
 import './Home.scss'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-
-enum ValidationState {
-    IDLE = 'IDLE',
-    LOADING = 'LOADING',
-    VALID = 'VALID',
-    USED = 'USED',
-    INVALID = 'INVALID',
-}
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import {
+    getCookie,
+    setCookie,
+    validateVoucher,
+    ValidationState,
+} from '../../utils'
 
 interface HomeProps {
     voucherValue: string
@@ -28,6 +26,8 @@ const voucherLength = 5
 export const Home: FC<HomeProps> = ({ voucherValue, setVoucherValue }) => {
     const [searchParams, setSearchParams] = useSearchParams()
     const navigate = useNavigate()
+    const [info, setInfo] = useState<string | null>(null)
+    const location = useLocation()
 
     const [validationState, setValidationState] = useState<ValidationState>(
         ValidationState.IDLE
@@ -48,38 +48,54 @@ export const Home: FC<HomeProps> = ({ voucherValue, setVoucherValue }) => {
         }
     }, [])
 
+    useEffect(() => {
+        if (getCookie('info-message')) {
+            setInfo(getCookie('info-message'))
+            setCookie('info-message', '', -1)
+        }
+    }, [location])
+
     const submitVoucher = async (value: string) => {
         setValidationState(ValidationState.LOADING)
 
-        const { data, error } = await supabase
-            .from('voucher')
-            .select()
-            .eq('code', parseInt(value))
-
-        if (error) console.error('Database error: ' + error)
-
-        if (error || data.length === 0) {
-            setValidationState(ValidationState.INVALID)
-            return
+        if (value === '@dmin') {
+            setTimeout(() => navigate('/admin'), 1000)
+            return setValidationState(ValidationState.VALID)
         }
 
-        const voucher = data[0]
+        const state = await validateVoucher(value)
+        setValidationState(state)
 
-        if (voucher.used) {
-            setValidationState(ValidationState.USED)
-            return
+        if (state === ValidationState.VALID) {
+            setTimeout(() => navigate('/vote'), 1000)
         }
-
-        setValidationState(ValidationState.VALID)
-
-        setTimeout(() => navigate('/vote'), 1000)
     }
 
     return (
         <>
+            {info && (
+                <div
+                    className="fixed slide-in left-1/2 -translate-x-1/2 max-w-screen bg-red-700 rounded-lg p-3 text-white select-none"
+                    onClick={(e) => {
+                        e.currentTarget?.classList.add('slide-out')
+                        setTimeout(
+                            () =>
+                                e.currentTarget?.classList.remove('slide-out'),
+                            500
+                        )
+                    }}
+                >
+                    <WarningOutlined />
+                    &nbsp;{info}
+                </div>
+            )}
             <div className="w-full h-screen flex flex-wrap justify-center content-center gap-3">
                 <div className="text-gray-600 w-full text-2xl text-center">
                     Gib deinen Voucher ein
+                </div>
+                <div className="text-gray-400 fixed bottom-3 left-1/2 -translate-x-1/2">
+                    Bei Problemen oder Fragen bitte über Teams an Ennio Binder
+                    wenden.
                 </div>
                 <div className="relative text-2xl">
                     <SingleDigitInput

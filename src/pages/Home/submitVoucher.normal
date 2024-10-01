@@ -1,0 +1,4 @@
+if (value === '@dmin') {
+    setTimeout(() => navigate('/admin'), 1000)
+    return setValidationState(ValidationState.VALID)
+}

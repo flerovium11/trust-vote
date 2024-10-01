@@ -1,103 +1,212 @@
 import { FC, useContext, useEffect, useState } from 'react'
 import { SortableContainer, SortableProvider } from '../../components/Sortable'
-import {
-    ArrowRightOutlined,
-    LoadingOutlined,
-    QuestionCircleOutlined,
-} from '@ant-design/icons'
+import { ArrowRightOutlined, QuestionCircleOutlined } from '@ant-design/icons'
 import { supabase } from '../../supabase'
-import { SortableContext } from '../../components/Sortable/SortableProvider'
-import { Button, Popconfirm } from 'antd'
-
+import {
+    Item,
+    SortableContext,
+} from '../../components/Sortable/SortableProvider'
+import { Button, Popconfirm, Skeleton } from 'antd'
+import { setCookie, validateVoucher, ValidationState } from '../../utils'
+import { useNavigate } from 'react-router-dom'
 interface VoteProps {
     voucherValue: string
+    setVoucherValue: (value: string) => void
 }
 
-enum FetchState {
+export enum FetchState {
     LOADING = 'LOADING',
     SUCCESS = 'SUCCESS',
     ERROR = 'ERROR',
 }
 
-interface Candidate {
+export interface Candidate {
+    id: number
     display_name: string
 }
 
-const minCandidates = 3
+const minCandidates = 6
 
-export const Vote: React.FC<VoteProps> = () => {
+export const Vote: React.FC<VoteProps> = ({
+    voucherValue,
+    setVoucherValue,
+}) => {
     const [candidates, setCandidates] = useState<Candidate[]>([])
+    const [candidatesCount, setCandidatesCount] =
+        useState<number>(minCandidates)
     const [fetchCandiatesState, setFetchCandidatesState] = useState<FetchState>(
         FetchState.LOADING
     )
+
+    const navigate = useNavigate()
 
     useEffect(() => {
         const fetchCandiates = async () => {
             const { data, error } = await supabase
                 .from('candidate')
-                .select('display_name')
+                .select('id, display_name')
 
             if (error) {
                 setFetchCandidatesState(FetchState.ERROR)
-                return console.error('Database error:' + error)
+                return console.error('Database error: ' + error.message)
             }
 
             setCandidates(data)
+            setCandidatesCount(Math.min(data.length, minCandidates))
             setFetchCandidatesState(FetchState.SUCCESS)
         }
 
         fetchCandiates()
     }, [])
 
+    const onVote = async (items: Item[]) => {
+        const state = await validateVoucher(voucherValue)
+
+        if (state === ValidationState.INVALID) {
+            setCookie(
+                'info-message',
+                'Voucher ungültig, bitte versuche es mit einem anderen',
+                1
+            )
+            return navigate('/')
+        }
+
+        if (state === ValidationState.USED) {
+            setCookie(
+                'info-message',
+                'Voucher bereits verwendet, bitte versuche es mit einem anderen',
+                1
+            )
+            return navigate('/')
+        }
+
+        const { error } = await supabase
+            .from('voucher')
+            .update({ used: true })
+            .eq('code', voucherValue)
+
+        if (error) {
+            console.error('Database error: ' + error.message)
+            setCookie(
+                'info-message',
+                'Fehler beim Einlösen des Vouchers, bitte versuche es erneut',
+                1
+            )
+            return navigate('/')
+        }
+
+        const voteCandidates = items.filter((item) => item.containerId === '2')
+
+        if (voteCandidates.length !== candidatesCount) {
+            setCookie(
+                'info-message',
+                `Du musst ${candidatesCount} Personen wählen`,
+                1
+            )
+            return navigate('/vote')
+        }
+
+        for (let i = 0; i < voteCandidates.length; i++) {
+            const { error } = await supabase.from('vote').insert({
+                candidate_id: voteCandidates[i].candidateId,
+                points: candidatesCount - i,
+            })
+
+            if (error) {
+                console.error('Database error: ' + error.message)
+                setCookie(
+                    'info-message',
+                    'Fehler beim Speichern der Stimme, bitte versuche es erneut',
+                    1
+                )
+                return navigate('/')
+            }
+        }
+
+        setVoucherValue('')
+        navigate('/voted')
+    }
+
     return (
-        <div className="overflow-hidden h-screen relative p-6 max-w-screen">
+        <div className="overflow-hidden min-h-screen relative p-6 max-w-screen">
             <div className="m-auto sm:max-w-xl">
-                {fetchCandiatesState === FetchState.LOADING && (
-                    <>
-                        <LoadingOutlined /> &nbsp;Lade Kandidat*innen...
-                    </>
-                )}
                 {fetchCandiatesState === FetchState.ERROR && (
                     <div className="text-red-500">
                         Kandidat*innen konnten nicht geladen werden, bitte lade
                         die Seite erneut.
                     </div>
                 )}
-                {fetchCandiatesState === FetchState.SUCCESS && (
+                {(fetchCandiatesState === FetchState.SUCCESS ||
+                    fetchCandiatesState === FetchState.LOADING) && (
                     <>
-                        {candidates.length === 0 && (
-                            <div>
-                                Es gibt noch keine Kandidat*innen zu wählen
-                            </div>
-                        )}
-                        {candidates.length > 0 && (
+                        {candidates.length === 0 &&
+                            fetchCandiatesState !== FetchState.LOADING && (
+                                <div>
+                                    Es gibt noch keine Kandidat*innen zu wählen
+                                </div>
+                            )}
+                        {(candidates.length > 0 ||
+                            fetchCandiatesState === FetchState.LOADING) && (
                             <>
                                 <div className="mt-5 mb-5 text-lg">
-                                    Ziehe die 6 Personen nach rechts, die du
-                                    gerne in der SV sehen willst. Ganz oben
-                                    den/die Schulsprecher*in, dann den/die 1.
-                                    Stellvertreter*in, usw.
+                                    Ziehe die {candidatesCount} Personen nach
+                                    rechts, die du gerne in der SV sehen willst.
+                                    Ganz oben den/die Schulsprecher*in, dann
+                                    den/die 1. Stellvertreter*in, usw.
                                 </div>
-                                <SortableProvider
-                                    _items={candidates.map((candidate) => ({
-                                        content: candidate.display_name,
-                                        containerId: '1',
-                                    }))}
-                                >
-                                    <div className="flex gap-3 min-h-80 overflow visible">
-                                        <SortableContainer id="1" />
-                                        <ArrowRightOutlined className="my-auto px-5 text-blue-700 hidden sm:block" />
-                                        <SortableContainer
-                                            id="2"
-                                            maxItems={minCandidates}
+                                {fetchCandiatesState === FetchState.LOADING && (
+                                    <SortableProvider
+                                        items={Array(6).fill({
+                                            content: (
+                                                <Skeleton
+                                                    active
+                                                    paragraph={false}
+                                                    title={{
+                                                        width: '100%',
+                                                    }}
+                                                />
+                                            ),
+                                            containerId: '1',
+                                        })}
+                                    >
+                                        <div className="flex gap-3 min-h-80 overflow visible">
+                                            <SortableContainer id="1" />
+                                            <ArrowRightOutlined className="my-auto px-5 text-blue-700 hidden sm:block" />
+                                            <SortableContainer
+                                                id="2"
+                                                maxItems={candidatesCount}
+                                            />
+                                        </div>
+                                        <ConfirmButton
+                                            className="mt-5"
+                                            candidatesCount={candidatesCount}
+                                            onConfirm={() => {}}
                                         />
-                                    </div>
-                                    <ConfirmButton
-                                        className="mt-5"
-                                        candidates={candidates}
-                                        onConfirm={() => {}}
-                                    />
-                                </SortableProvider>
+                                    </SortableProvider>
+                                )}
+                                {fetchCandiatesState === FetchState.SUCCESS && (
+                                    <SortableProvider
+                                        items={candidates.map((candidate) => ({
+                                            content: candidate.display_name,
+                                            candidateId: candidate.id,
+                                            containerId: '1',
+                                        }))}
+                                    >
+                                        <div className="flex gap-3 min-h-80 overflow visible">
+                                            <SortableContainer id="1" />
+                                            <ArrowRightOutlined className="my-auto px-5 text-blue-700 hidden sm:block" />
+                                            <SortableContainer
+                                                id="2"
+                                                maxItems={candidatesCount}
+                                            />
+                                        </div>
+                                        <ConfirmButton
+                                            className="mt-5"
+                                            candidatesCount={candidatesCount}
+                                            onConfirm={(items) => onVote(items)}
+                                        />
+                                    </SortableProvider>
+                                )}
                             </>
                         )}
                     </>
@@ -108,13 +217,13 @@ export const Vote: React.FC<VoteProps> = () => {
 }
 
 interface ConfirmButtonProps {
-    candidates: Candidate[]
-    onConfirm: () => void
+    candidatesCount: number
+    onConfirm: (items: Item[]) => void
     className?: string
 }
 
 const ConfirmButton: FC<ConfirmButtonProps> = ({
-    candidates,
+    candidatesCount,
     onConfirm,
     className,
 }) => {
@@ -128,13 +237,13 @@ const ConfirmButton: FC<ConfirmButtonProps> = ({
             okText="Absenden"
             cancelText="Abbrechen"
             placement="bottom"
-            onConfirm={onConfirm}
+            onConfirm={() => onConfirm(items)}
         >
             <Button
                 className={className}
                 disabled={
                     items.filter((item) => item.containerId === '2').length <
-                    Math.min(minCandidates, candidates.length)
+                    candidatesCount
                 }
             >
                 Bestätigen

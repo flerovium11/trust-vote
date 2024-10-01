@@ -2,7 +2,35 @@
 @import 'variables';
 
 body {
-   min-height: 100vh;
-   background-color: $bg-main;
-   color: $text-main;
+    min-height: 100vh;
+    background-color: $bg-main;
+    color: $text-main;
+}
+
+.slide-in {
+    animation: slide-in 0.2s ease-out;
+    animation-fill-mode: forwards;
+}
+
+.slide-out {
+    animation: slide-out 0.2s ease-out;
+    animation-fill-mode: forwards;
+}
+
+@keyframes slide-out {
+    from {
+        top: 2em;
+    }
+    to {
+        top: -5em;
+    }
+}
+
+@keyframes slide-in {
+    from {
+        top: -5em;
+    }
+    to {
+        top: 2em;
+    }
 }

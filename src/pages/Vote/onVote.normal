@@ -1,0 +1,66 @@
+const state = await validateVoucher(voucherValue)
+
+if (state === ValidationState.INVALID) {
+    setCookie(
+        'info-message',
+        'Voucher ungültig, bitte versuche es mit einem anderen',
+        1
+    )
+    return navigate('/')
+}
+
+if (state === ValidationState.USED) {
+    setCookie(
+        'info-message',
+        'Voucher bereits verwendet, bitte versuche es mit einem anderen',
+        1
+    )
+    return navigate('/')
+}
+
+const { error } = await supabase
+    .from('voucher')
+    .update({ used: true })
+    .eq('code', voucherValue)
+
+if (error) {
+    console.error('Database error: ' + error.message)
+    setCookie(
+        'info-message',
+        'Fehler beim Einlösen des Vouchers, bitte versuche es erneut',
+        1
+    )
+    return navigate('/')
+}
+
+const voteCandidates = items.filter((item) => item.containerId === '2')
+
+if (voteCandidates.length !== candidatesCount) {
+    setCookie(
+        'info-message',
+        `Du musst ${candidatesCount} Personen wählen`,
+        1
+    )
+    return navigate('/vote')
+}
+
+for (let i = 0; i < voteCandidates.length; i++) {
+    console.log(voteCandidates[i].candidateId)
+    const { error } = await supabase.from('vote').insert({
+        candidate_id: voteCandidates[i].candidateId,
+        points: candidatesCount - i,
+    })
+
+    if (error) {
+        console.error('Database error: ' + error.message)
+        setCookie(
+            'info-message',
+            'Fehler beim Speichern der Stimme, bitte versuche es erneut',
+            1
+        )
+        return navigate('/')
+    }
+}
+
+setVoucherValue('')
+navigate('/voted')

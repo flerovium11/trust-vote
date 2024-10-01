@@ -13,6 +13,7 @@ import './Sortable.scss'
 
 export interface Item {
     content: ReactNode
+    candidateId: number
     dragStart?: { x: number; y: number }
     containerId: string
 }
@@ -23,7 +24,7 @@ export interface SortableContextValue {
 }
 
 interface SortableProviderProps extends PropsWithChildren {
-    _items: Item[]
+    items: Item[]
 }
 
 export const SortableContext = createContext<SortableContextValue>({
@@ -31,11 +32,8 @@ export const SortableContext = createContext<SortableContextValue>({
     setItems: () => {},
 })
 
-export const SortableProvider: FC<SortableProviderProps> = ({
-    _items,
-    children,
-}) => {
-    const [items, setItems] = useState<Item[]>(_items)
+export const SortableProvider: FC<SortableProviderProps> = (props) => {
+    const [items, setItems] = useState<Item[]>(props.items)
 
     useEffect(() => {
         const handleMouseUp = () => {
@@ -66,7 +64,7 @@ export const SortableProvider: FC<SortableProviderProps> = ({
                     setItems: setItems,
                 }}
             >
-                {children}
+                {props.children}
             </SortableContext.Provider>
         </MousePosProvider>
     )

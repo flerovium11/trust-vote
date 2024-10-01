@@ -1,3 +1,5 @@
+import { supabase } from './supabase'
+
 export const countdownString = (from: Date, to: Date): string => {
     const diff = to.getTime() - from.getTime()
     const days = Math.floor(diff / (1000 * 60 * 60 * 24))
@@ -18,4 +20,35 @@ export const getCookie = (name: string): string | null => {
     const parts = value.split(`; ${name}=`)
     if (parts.length === 2) return parts.pop()?.split(';').shift() ?? null
     return null
+}
+
+export enum ValidationState {
+    IDLE = 'IDLE',
+    LOADING = 'LOADING',
+    VALID = 'VALID',
+    USED = 'USED',
+    INVALID = 'INVALID',
+}
+
+export const validateVoucher = async (
+    value: string
+): Promise<ValidationState> => {
+    const { data, error } = await supabase
+        .from('voucher')
+        .select()
+        .eq('code', value)
+
+    if (error) console.error('Database error: ' + error.message)
+
+    if (error || data.length === 0) {
+        return ValidationState.INVALID
+    }
+
+    const voucher = data[0]
+
+    if (voucher.used) {
+        return ValidationState.USED
+    }
+
+    return ValidationState.VALID
 }
