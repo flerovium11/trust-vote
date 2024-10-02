@@ -7,6 +7,7 @@ import {
     useContext,
     createContext,
 } from 'react'
+import { SortableContext } from './SortableProvider'
 
 export const MousePosContext = createContext<{
     mousePos: { x: number; y: number }
@@ -16,23 +17,27 @@ export const MousePosProvider: FC<PropsWithChildren> = ({ children }) => {
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
 
     useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
+        const handleMouse = (e: MouseEvent) => {
             setMousePos({ x: e.clientX, y: e.clientY })
         }
 
-        const handleTouchMove = (e: TouchEvent) => {
+        const handleTouch = (e: TouchEvent) => {
             setMousePos({
                 x: e.touches[0].clientX,
                 y: e.touches[0].clientY,
             })
         }
 
-        window.addEventListener('mousemove', handleMouseMove)
-        window.addEventListener('touchmove', handleTouchMove)
+        window.addEventListener('mousemove', handleMouse)
+        window.addEventListener('mousedown', handleMouse)
+        window.addEventListener('touchmove', handleTouch)
+        window.addEventListener('touchstart', handleTouch)
 
         return () => {
-            window.removeEventListener('mousemove', handleMouseMove)
-            window.removeEventListener('touchmove', handleTouchMove)
+            window.removeEventListener('mousemove', handleMouse)
+            window.removeEventListener('touchmove', handleTouch)
+            window.removeEventListener('mousedown', handleMouse)
+            window.removeEventListener('touchstart', handleTouch)
         }
     }, [])
 

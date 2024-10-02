@@ -1,6 +1,5 @@
 .sortable-item {
     cursor: pointer;
-    position: relative;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -14,14 +13,19 @@
     }
 
     &.dragging {
-        position: absolute;
+        position: fixed;
+        pointer-events: all;
         z-index: 1000;
         box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
     }
 }
 
-body:has(.sortable-item.dragging) .sortable-item {
-    pointer-events: none;
+body:has(.sortable-item.dragging) {
+    cursor: move;
+
+    .sortable-item {
+        pointer-events: none;
+    }
 }
 
 .sortable-container {

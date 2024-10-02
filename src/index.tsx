@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
+import { HashRouter } from 'react-router-dom'
 import App from './components/App'
 import reportWebVitals from './reportWebVitals'
 import './styles/index.scss'
@@ -14,17 +14,15 @@ if (
     )
 }
 
-// export const electionStartDate = new Date(process.env.REACT_APP_ELECTION_START)
-// export const electionEndDate = new Date(process.env.REACT_APP_ELECTION_END)
-export const electionStartDate = new Date('2023-10-03 00:00:01')
-export const electionEndDate = new Date('2024-10-03 23:59:59')
+export const electionStartDate = new Date(process.env.REACT_APP_ELECTION_START)
+export const electionEndDate = new Date(process.env.REACT_APP_ELECTION_END)
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 root.render(
     <React.StrictMode>
-        <BrowserRouter>
+        <HashRouter>
             <App />
-        </BrowserRouter>
+        </HashRouter>
     </React.StrictMode>
 )
 

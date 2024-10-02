@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react'
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 import { electionStartDate, electionEndDate } from '../../index'
 
 import Home from '../../pages/Home'

@@ -21,6 +21,10 @@ export const Countdown: FC<CountdownProps> = ({ to }) => {
 
         const interval = setInterval(() => {
             setRemaining(countdownString(new Date(), to))
+
+            if (new Date() > to) {
+                navigate('/')
+            }
         }, 1000)
 
         return () => {

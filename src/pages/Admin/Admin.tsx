@@ -57,7 +57,7 @@ export const Admin: FC<AdminProps> = ({}) => {
 
         for (let i = 0; i < vouchers.length; i++) {
             const voucher = vouchers[i]
-            const url = `localhost:3000?v=${voucher}`
+            const url = `https://wahl.gymgmunden.at/#/?v=${voucher}`
             const col = i % columns
             const row = Math.floor(i / columns) % rows
 

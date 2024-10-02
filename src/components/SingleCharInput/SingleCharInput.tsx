@@ -78,6 +78,10 @@ export const SingleCharInput: FC<SingleCharInputProps> = ({
                         onInput={onCharInput}
                         onKeyDown={onCharKeyDown}
                         onPaste={onPaste}
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
                     />
                 ))}
             </div>

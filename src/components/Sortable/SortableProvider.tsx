@@ -14,7 +14,7 @@ import './Sortable.scss'
 export interface Item {
     content: ReactNode
     candidateId: number
-    dragStart?: { x: number; y: number }
+    dragStart?: { width: number; height: number }
     containerId: string
 }
 
