@@ -47,7 +47,16 @@ export const SortableProvider: FC<SortableProviderProps> = (props) => {
             )
         }
 
+        const handleTouchMove = (e: TouchEvent) => {
+            if (document.body.querySelector('.sortable-item.dragging')) {
+                e.preventDefault()
+            }
+        }
+
         window.addEventListener('touchend', handleMouseUp)
+        window.addEventListener('touchmove', handleTouchMove, {
+            passive: false,
+        })
         window.addEventListener('mouseup', handleMouseUp)
 
         return () => {
